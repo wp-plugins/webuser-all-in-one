@@ -1,0 +1,33 @@
+body.login {
+	background-image: url(http://www.nickjr.com/flex_article/assets/wallpaper/diego-moon-rescue-wallpaper/diego-moon-rescue-wallpaper-wide.jpg);
+	background-size: cover;
+}
+body.login div#login {}
+body.login div#login h1 {}
+body.login div#login h1 a {}
+body.login div#login form#loginform {
+	padding: 26px 24px 35px;
+}
+body.login div#login form#loginform p {}
+body.login div#login form#loginform p label {}
+body.login div#login form#loginform input {}
+body.login div#login form#loginform input#user_login {}
+body.login div#login form#loginform input#user_pass {}
+body.login div#login form#loginform p.forgetmenot {
+	margin-top: 6px;
+}
+body.login div#login form#loginform p.forgetmenot input#rememberme {}
+body.login div#login form#loginform p.submit {}
+body.login div#login form#loginform p.submit input#wp-submit {
+	background-color: #6e9f4b;
+	color: white;
+	border: 1pt solid #618e3e;
+}
+body.login div#login p#nav {
+	text-align: center;
+}
+body.login div#login p#nav a {}
+body.login div#login p#backtoblog {
+	text-align: center;
+}
+body.login div#login p#backtoblog a {}
