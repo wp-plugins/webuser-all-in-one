@@ -3,13 +3,13 @@
 Plugin Name: WebUser All in one
 Plugin URI: 
 Description: >>> Capabilities: Deze plugin overschrijft alle rechten van gebruikers en stelt ze zelf in. Admin en teamwork@webuser.nl hebben standaard alle rechten, de rest van de gebruikers hebben niks. Admin/teamwork kunnen zelf rechten beheren. >>> Informatie Widget: Nieuwste info op het Dashboard als widget.
-Version: 1.1
+Version: 1.2
 Author: WebUser
 Author URI:
 */
 
 // Webuser capabilities BEGIN
-if (!class_exists('DisableCapabilitiesPlugin')) {
+if (!class_exists('DisableCapabilitiesPlugin') && get_option('webuser_capabilities') !== 'false') {
 
 	class DisableCapabilitiesPlugin {
 
@@ -220,7 +220,7 @@ function webuser_admin_menu() {
 
 // Webuser dashboardWidget BEGIN
 function custom_dashboard_widget() {
-	
+	if (get_option('webuser_dashboard') === 'off') return;
 	//wp_add_dashboard_widget('webuser_dashboard_widget', 'Webuser Informatie', 'custom_dashboard_widget_get_content');
 	add_meta_box(
 		 'webuser_dashboard_widget'
@@ -265,6 +265,7 @@ class basic_google_apps_login extends core_google_apps_login {
 	private static $instance = null;
 	
 	public static function get_instance() {
+		if (get_option('webuser_googlelogin') === 'off') return;
 		if (null == self::$instance) {
 			self::$instance = new self;
 		}
@@ -407,6 +408,7 @@ add_action( 'login_enqueue_scripts', 'my_login_stylesheet' );
 
 
 function header_add_box() {
+	if (get_option('webuser_header') === 'off') return;
 	$screens = array( 'post', 'page');
 	foreach($screens as $screen) {
 		add_meta_box(
@@ -429,6 +431,10 @@ function header_add_box_call( $post ) {
 	$galleries = $nggdb->find_all_galleries();
 	$data = get_post_meta($post->ID, 'webuser_header_gallery', true);
 	$imgs = get_post_meta($post->ID, 'webuser_header_images', true);
+	$speed = get_post_meta($post->ID, 'webuser_header_speed' , true);
+	$fadeout = get_post_meta($post->ID, 'webuser_header_fadeout' , true);
+	$height = get_post_meta($post->ID, 'webuser_header_height', true);
+	$sizer = get_post_meta($post->ID, 'webuser_header_sizer', true);
 	
 	echo ("<label for='header-select'>Select a gallery</label><br />");
 	echo ("<select name='header-select' id='header-select' style='width: 100%' onChange='change_select_box()'>");
@@ -483,7 +489,18 @@ function header_add_box_call( $post ) {
 		echo("Je hebt nog geen gallery geselecteerd!");
 	}
 	
-	echo ("</div>");
+	echo ("</div>
+		<div class='slider-settings'>
+			Hier kunt u de Slider instellingen bepalen:<br />
+			Slider snelheid: <input type='text' name='speed' value='" . $speed . "' size='5' /> milliseconde<br />
+			Slider fadeout: <input type='text' name='fade-out' value='" . $fadeout . "' size='5' /> milliseconde<br />
+			Slider height: <input type='text' name='height' value='" . $height . "' size='5' /> px<br />
+			Slider image size: <select name='sizer'>
+				<option value='horizontal'" . (($sizer === 'horizontal') ? ' selected' : '') . ">Horizontal</option>
+				<option value='vertical'" . (($sizer === 'vertical') ? ' selected' : '') . ">Vertical</option>
+			</select><br />
+		</div>
+	");
 	?>
 	<script>
 		function change_select_box() {
@@ -549,10 +566,28 @@ function header_save_data( $post_id ) {
 	if (isset($_POST['header-select'])) {
 		$data = esc_attr($_POST['header-select']);
 		$img = esc_attr($_POST['header-data']);
+		update_post_meta( $post_id , 'webuser_header_gallery', $data);
+		update_post_meta( $post_id , 'webuser_header_images', $img);
 	}
 	
-	update_post_meta( $post_id , 'webuser_header_gallery', $data);
-	update_post_meta( $post_id , 'webuser_header_images', $img);
+	if (isset($_POST['speed'])) {
+		$speed = esc_attr($_POST['speed']);
+		update_post_meta( $post_id , 'webuser_header_speed' , $speed );
+	}
+	if (isset($_POST['fade-out'])) {
+		$fadeout = esc_attr($_POST['fade-out']);
+		update_post_meta( $post_id , 'webuser_header_fadeout' , $fadeout);
+	}
+
+	if (isset($_POST['height'])) {
+		$height = esc_attr($_POST['height']);
+		update_post_meta( $post_id , 'webuser_header_height' , $height );
+	}
+
+	if (isset($_POST['sizer'])) {
+		$sizer = esc_attr($_POST['sizer']);
+		update_post_meta( $post_id , 'webuser_header_sizer', $sizer);
+	}
 	
 }
 
@@ -574,5 +609,146 @@ function cw_change_dashboard_column_width() {
 
 add_action('admin_head','cw_change_dashboard_column_width');
 
+add_shortcode('webuser_header', 'create_webuser_header');
+function create_webuser_header($atts, $content = '') {
+	?>
+	<!-- HEADER IMAGE CODE! DO NOT CHANGE! -->
+		<!-- 
+			If you wish to move the header somewhere else,
+			Copy this code and move it to where it belongs
+		-->
+		<?php
+		if (!$sliderspeed = get_post_meta( get_the_id(), 'webuser_header_speed', true)) {
+			$sliderspeed = 6000;
+		}
+		if (!$fadeout = get_post_meta( get_the_id() , 'webuser_header_fadeout' , true)) {
+			$fadeout = 2000;
+		}
+		if (!$height = get_post_meta( get_the_id() , 'webuser_header_height' , true)) {
+			$height = '301px';
+		}
+		if (!$sizer = get_post_meta( get_the_id() , 'webuser_header_sizer' , true)) {
+			$sizer = 'horizontal';
+		}
+		?>
+		<style>
+			#headerimage {
+				position: relative;
+				width: 1200px;
+				height: <?php echo $height; ?>px;
+			}
+			#headerimage > div {
+				position: absolute;
+				margin-left: auto;
+				margin-right: auto;
+				left: 0;
+				right: 0;
+				height: <?php echo $height; ?>px;
+			}
 
+			.ngg-gallery-singlepic-image {
+				text-align: center;
+				position: absolute;
+				left: 0;
+				top: 0;
+				width: 100%;
+				height: <?php echo $height; ?>px;
+				<?php echo ($sizer === 'horizontal') ? 'overflow: hidden;' : ''; ?>
+			}
+
+			<?php if ($sizer === 'horizontal'): ?>
+				#headerimage img {
+					max-width: 1200px;
+					width: 100%;
+					height: auto;
+					position: absolute;
+					top: 50%;
+					left: 0;
+					-webkit-transform: translateY(-50%);
+					-moz-transform: translateY(-50%);
+					transform: translateY(-50%);
+				}
+			<?php else: ?>
+				#headerimage img {
+					max-width:1200px;
+					max-height:<?php echo $height; ?>px;
+					margin: 0 auto;
+				}
+			<?php endif; ?>
+			
+		</style>
+		<div id="headerimage">
+		<?php
+		$imageIDs = get_post_meta( get_the_id(), 'webuser_header_images', true );
+
+		$colorcodes = array();
+		if ($imageIDs != '') {
+			$images = explode(',', $imageIDs);
+			global $nggdb;
+			$falseimg = '';
+			$i = 0;
+			foreach($images as $object) {
+				global $wpdb;
+				$image = $nggdb->find_image($object);
+				if (count($image) != 0) {
+					$showgallery .= '<div> 
+						<div class="' . $i . ' ngg-gallery-singlepic-image">
+							<img src="' . $image->imageURL. '" />
+							<div class="description">' . $image->description . '</div>
+						</div>
+					</div>';
+					$i++;
+				} else {
+					if ($falseimg !== '') 
+						$falseimg .= ',' . $object;
+					else
+						$falseimg = $object;
+				}
+				
+			}
+			if ($falseimg !== '') {
+				$remove = explode(',', $falseimg);
+				foreach($remove as $value) {
+					$imageIDs = str_replace($value . ',', '', $imageIDs);
+					$imageIDs = str_replace( ',' . $value, '', $imageIDs);
+					$imageIDs = str_replace($value, '', $imageIDs);
+				}
+					
+				update_post_meta(get_the_id(), 'webuser_header_images', $imageIDs);
+			}
+			echo $showgallery;
+			?>
+			
+			
+			<?php
+		} else {
+			 if ( get_header_image() ) { ?>
+				<div>
+					<div class="ngg-gallery-singlepic-image "><img class="ngg-singlepic" src="<?php header_image(); ?>" alt="" /></div>
+				</div>
+		<?php }
+		}
+	?>
+	</div>
+	
+	<script>
+		$("#headerimage > div:gt(0)").hide();
+
+		var index = 0;
+		var maxindex = $('#headerimage > div').length;
+		var interval;
+		if (maxindex != 1) {
+			interval = setInterval(function () {
+				index = index < maxindex - 1 ? index + 1 : 0;
+				$('#headerimage > div')
+				.fadeOut(<?php echo $fadeout; ?>);
+				$('#headerimage > div:has(.' + index + ')')
+				.fadeIn(<?php echo $fadeout; ?>)
+				.prependTo('#headerimage');
+			}, <?php echo $sliderspeed; ?>);
+		}
+	</script>
+	<!-- END OF HEADER IMAGE CODE! -->
+	<?php
+}
 ?>

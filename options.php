@@ -163,4 +163,84 @@
 		?>
 	</form>
 	
+	<h2>Configureer Modules</h2>
+	<?php if (isset($_POST['modules'])) {
+		$capabilities = esc_attr($_POST['capabilities']);
+		$header = esc_attr($_POST['header']);
+		$googlelogin = esc_attr($_POST['googlelogin']);
+		$dashboard = esc_attr($_POST['dashboard']);
+
+		update_option('webuser_capabilities' , $capabilities);
+		update_option('webuser_header' , $header);
+		update_option('webuser_googlelogin' , $googlelogin);
+		update_option('webuser_dashboard' , $dashboard);
+
+		?>
+			<div class='updated'>
+				Modules zijn succesvol aangepast:<br />
+				<h3>Capabilities:</h3> <?php echo $capabilities; ?><br />
+				<h3>Custom Header:</h3> <?php echo $header; ?><br />
+				<h3>Google Login:</h3> <?php echo $googlelogin; ?><br />
+				<h3>Dashboard:</h3> <?php echo $dashboard; ?><br />
+			</div>
+		<?php
+	} 
+	$capabilities = get_option('webuser_capabilities');
+	$header = get_option('webuser_header');
+	$googlelogin = get_option('webuser_googlelogin');
+	$dashboard = get_option('webuser_dashboard');
+
+
+
+	?>
+	<form method='post' action='<?php $_SERVER['REQUEST_URI']; ?>'>
+		<input type='hidden' name='modules' value='1' />
+		<table border='0'>
+			<tr>
+				<td width='300' style='vertical-align: top;'>
+					<h3>Capabilities Module</h3>
+				</td>
+				<td>
+					<select name='capabilities'>
+						<option value='on'<?php echo ($capabilities === 'on') ? ' selected' : ''; ?>>Aan</option>
+						<option value='off'<?php echo ($capabilities === 'off') ? ' selected' : ''; ?>>Uit</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td width='300' style='vertical-align: top;'>
+					<h3>Custom Header Module</h3>
+				</td>
+				<td>
+					<select name='header'>
+						<option value='on'<?php echo ($header === 'on') ? ' selected' : ''; ?>>Aan</option>
+						<option value='off'<?php echo ($header === 'off') ? ' selected' : ''; ?>>Uit</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td width='300' style='vertical-align: top;'>
+					<h3>Google Login Module</h3>
+				</td>
+				<td>
+					<select name='googlelogin'>
+						<option value='on'<?php echo ($googlelogin === 'on') ? ' selected' : ''; ?>>Aan</option>
+						<option value='off'<?php echo ($googlelogin === 'off') ? ' selected' : ''; ?>>Uit</option>
+					</select>
+				</td>
+			</tr>
+			<tr>
+				<td width='300' style='vertical-align: top;'>
+					<h3>Dashboard Module</h3>
+				</td>
+				<td>
+					<select name='dashboard'>
+						<option value='on'<?php echo ($dashboard === 'on') ? ' selected' : ''; ?>>Aan</option>
+						<option value='off'<?php echo ($dashboard === 'off') ? ' selected' : ''; ?>>Uit</option>
+					</select>
+				</td>
+			</tr>
+		</table>
+		<?php submit_button('Aanpassen'); ?>
+	</form>
 </div>
