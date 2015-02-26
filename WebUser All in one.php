@@ -625,7 +625,7 @@ function create_webuser_header($atts, $content = '') {
 			$fadeout = 2000;
 		}
 		if (!$height = get_post_meta( get_the_id() , 'webuser_header_height' , true)) {
-			$height = '301px';
+			$height = '301';
 		}
 		if (!$sizer = get_post_meta( get_the_id() , 'webuser_header_sizer' , true)) {
 			$sizer = 'horizontal';
