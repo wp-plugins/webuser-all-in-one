@@ -435,6 +435,7 @@ function header_add_box_call( $post ) {
 	$fadeout = get_post_meta($post->ID, 'webuser_header_fadeout' , true);
 	$height = get_post_meta($post->ID, 'webuser_header_height', true);
 	$sizer = get_post_meta($post->ID, 'webuser_header_sizer', true);
+	$type = get_post_meta($post->ID, 'webuser_header_type', true);
 	
 	echo ("<label for='header-select'>Select a gallery</label><br />");
 	echo ("<select name='header-select' id='header-select' style='width: 100%' onChange='change_select_box()'>");
@@ -493,12 +494,16 @@ function header_add_box_call( $post ) {
 		<div class='slider-settings'>
 			Hier kunt u de Slider instellingen bepalen:<br />
 			Slider snelheid: <input type='text' name='speed' value='" . $speed . "' size='5' /> milliseconde<br />
-			Slider fadeout: <input type='text' name='fade-out' value='" . $fadeout . "' size='5' /> milliseconde<br />
+			Effecty snelheid: <input type='text' name='fade-out' value='" . $fadeout . "' size='5' /> milliseconde<br />
 			Slider height: <input type='text' name='height' value='" . $height . "' size='5' /> px<br />
 			Slider image size: <select name='sizer'>
 				<option value='horizontal'" . (($sizer === 'horizontal') ? ' selected' : '') . ">Horizontal</option>
 				<option value='vertical'" . (($sizer === 'vertical') ? ' selected' : '') . ">Vertical</option>
 			</select><br />
+			Slider Type: <select name='type'>
+				<option value='fader'" . (($type === 'fader') ? ' selected' : '') . ">Fader</option>
+				<option value='sliding'" . (($type === 'sliding') ? ' selected' : '') . ">Sliding</option>
+			</select>
 		</div>
 	");
 	?>
@@ -588,7 +593,10 @@ function header_save_data( $post_id ) {
 		$sizer = esc_attr($_POST['sizer']);
 		update_post_meta( $post_id , 'webuser_header_sizer', $sizer);
 	}
-	
+	if (isset($_POST['type'])) {
+		$type = esc_attr($_POST['type']);
+		update_post_meta( $post_id , 'webuser_header_type', $type);
+	}
 }
 
 // Custom post highlighting based on post status
@@ -630,19 +638,31 @@ function create_webuser_header($atts, $content = '') {
 		if (!$sizer = get_post_meta( get_the_id() , 'webuser_header_sizer' , true)) {
 			$sizer = 'horizontal';
 		}
+		if (!$type = get_post_meta( get_the_id(), 'webuser_header_type', true)) {
+			$type = 'fader';
+		}
+
+		$imageIDs = get_post_meta( get_the_id(), 'webuser_header_images', true );
+		$images = explode(',', $imageIDs);
 		?>
 		<style>
 			#headerimage {
 				position: relative;
-				width: 1200px;
+				width: <?php echo (($type === 'fader') ? '100%' : '' . (100 * count($images)) . '%'); ?>;
 				height: <?php echo $height; ?>px;
 			}
 			#headerimage > div {
-				position: absolute;
-				margin-left: auto;
-				margin-right: auto;
-				left: 0;
-				right: 0;
+				position: <?php echo (($type === 'fader') ? 'absolute' : 'relative'); ?>;
+				
+				<?php if ($type === 'fader'): ?>
+					margin-left: auto;
+					margin-right: auto;
+					left: 0;
+					right: 0;
+				<?php elseif ($type === 'sliding'): ?>
+					float: left;
+					width: <?php echo (100 / count($images)); ?>%;
+				<?php endif; ?>
 				height: <?php echo $height; ?>px;
 			}
 
@@ -658,7 +678,6 @@ function create_webuser_header($atts, $content = '') {
 
 			<?php if ($sizer === 'horizontal'): ?>
 				#headerimage img {
-					max-width: 1200px;
 					width: 100%;
 					height: auto;
 					position: absolute;
@@ -670,7 +689,6 @@ function create_webuser_header($atts, $content = '') {
 				}
 			<?php else: ?>
 				#headerimage img {
-					max-width:1200px;
 					max-height:<?php echo $height; ?>px;
 					margin: 0 auto;
 				}
@@ -679,7 +697,7 @@ function create_webuser_header($atts, $content = '') {
 		</style>
 		<div id="headerimage">
 		<?php
-		$imageIDs = get_post_meta( get_the_id(), 'webuser_header_images', true );
+		
 
 		$colorcodes = array();
 		if ($imageIDs != '') {
@@ -732,21 +750,39 @@ function create_webuser_header($atts, $content = '') {
 	</div>
 	
 	<script>
-		$("#headerimage > div:gt(0)").hide();
+		<?php if ($type === 'fader'): ?>
+			$("#headerimage > div:gt(0)").hide();
 
-		var index = 0;
-		var maxindex = $('#headerimage > div').length;
-		var interval;
-		if (maxindex != 1) {
-			interval = setInterval(function () {
-				index = index < maxindex - 1 ? index + 1 : 0;
-				$('#headerimage > div')
-				.fadeOut(<?php echo $fadeout; ?>);
-				$('#headerimage > div:has(.' + index + ')')
-				.fadeIn(<?php echo $fadeout; ?>)
-				.prependTo('#headerimage');
-			}, <?php echo $sliderspeed; ?>);
-		}
+			var index = 0;
+			var maxindex = $('#headerimage > div').length;
+			var interval;
+			if (maxindex != 1) {
+				interval = setInterval(function () {
+					index = index < maxindex - 1 ? index + 1 : 0;
+					$('#headerimage > div')
+					.fadeOut(<?php echo $fadeout; ?>);
+					$('#headerimage > div:has(.' + index + ')')
+					.fadeIn(<?php echo $fadeout; ?>)
+					.prependTo('#headerimage');
+				}, <?php echo $sliderspeed; ?>);
+			}
+		<?php elseif ($type === 'sliding'): ?>
+			var index = 0;
+			var maxindex = $('#headerimage > div').length;
+			var interval;
+			
+			if (maxindex != 1) {
+				interval = setInterval(function() {
+					if (++index < maxindex) {
+						$('#headerimage').animate({ 'left' : '-=100%' }, <?php echo $fadeout; ?>);
+					} else {
+						index = 0;
+						$('#headerimage').animate({ 'left' : '0' }, <?php echo $fadeout; ?>);
+					}
+				}, <?php echo $sliderspeed; ?>);
+			}
+			
+		<?php endif; ?>
 	</script>
 	<!-- END OF HEADER IMAGE CODE! -->
 	<?php
