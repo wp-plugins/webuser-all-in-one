@@ -3,7 +3,7 @@
 Plugin Name: WebUser All in one
 Plugin URI: 
 Description: >>> Capabilities: Deze plugin overschrijft alle rechten van gebruikers en stelt ze zelf in. Admin en teamwork@webuser.nl hebben standaard alle rechten, de rest van de gebruikers hebben niks. Admin/teamwork kunnen zelf rechten beheren. >>> Informatie Widget: Nieuwste info op het Dashboard als widget.
-Version: 1.2
+Version: 1.2.3
 Author: WebUser
 Author URI:
 */
@@ -141,7 +141,7 @@ if (!class_exists('DisableCapabilitiesPlugin') && get_option('webuser_capabiliti
 		{
 			global $current_user;
 			//print_r($current_user);exit;
-			if(  $current_user->user_login !== 'admin' && $current_user->user_email !== 'teamwork@webuser.nl' )
+			if( $current_user->user_login !== 'admin' && $current_user->user_login !== 'wspadmin' && $current_user->user_email !== 'teamwork@webuser.nl' && $current_user->user_email !== 'wspadmin@wordpressservicepackage.com' )
 			{
 				$data = get_site_option("webuser_" . $current_user->ID);
 				$data = explode(',', $data);
